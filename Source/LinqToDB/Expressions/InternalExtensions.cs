@@ -16,11 +16,14 @@ namespace LinqToDB.Expressions
 	using LinqToDB.Common;
 	using LinqToDB.Common.Internal;
 
-	static class InternalExtensions
+	/// <summary>
+	/// Internal API.
+	/// </summary>
+	public static class InternalExtensions
 	{
 		#region IsConstant
 
-		public static bool IsConstantable(this Type type, bool includingArrays)
+		internal static bool IsConstantable(this Type type, bool includingArrays)
 		{
 			if (type.IsEnum)
 				return true;
@@ -55,7 +58,7 @@ namespace LinqToDB.Expressions
 		#endregion
 
 		#region Path
-		public static void Path<TContext>(this Expression expr, Expression path, TContext context, Action<TContext, Expression, Expression> func)
+		internal static void Path<TContext>(this Expression expr, Expression path, TContext context, Action<TContext, Expression, Expression> func)
 		{
 			new PathVisitor<TContext>(context, path, func).Path(expr);
 		}
@@ -63,7 +66,7 @@ namespace LinqToDB.Expressions
 
 		#region Helpers
 
-		public static LambdaExpression UnwrapLambda(this Expression ex)
+		internal static LambdaExpression UnwrapLambda(this Expression ex)
 			=> (LambdaExpression)((UnaryExpression)ex).Operand.Unwrap();
 
 		[return: NotNullIfNotNull("ex")]
@@ -84,7 +87,7 @@ namespace LinqToDB.Expressions
 		}
 
 		[return: NotNullIfNotNull("ex")]
-		public static Expression? UnwrapConvert(this Expression? ex)
+		internal static Expression? UnwrapConvert(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -104,7 +107,7 @@ namespace LinqToDB.Expressions
 		}
 
 		[return: NotNullIfNotNull("ex")]
-		public static Expression? UnwrapConvertToObject(this Expression? ex)
+		internal static Expression? UnwrapConvertToObject(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -125,7 +128,7 @@ namespace LinqToDB.Expressions
 		}
 
 		[return: NotNullIfNotNull("ex")]
-		public static Expression? UnwrapWithAs(this Expression? ex)
+		internal static Expression? UnwrapWithAs(this Expression? ex)
 		{
 			return ex?.NodeType switch
 			{
@@ -140,7 +143,7 @@ namespace LinqToDB.Expressions
 			Methods.Enumerable.AsQueryable, Methods.LinqToDB.SqlExt.ToNotNull, Methods.LinqToDB.SqlExt.Alias
 		};
 
-		public static Expression SkipPathThrough(this Expression expr)
+		internal static Expression SkipPathThrough(this Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -163,12 +166,12 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
-		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema)
+		internal static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema)
 		{
 			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr);
 		}
 
-		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
+		internal static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
 		{
 			var accessors = new Dictionary<Expression,Expression>();
 
@@ -196,10 +199,10 @@ namespace LinqToDB.Expressions
 
 							switch (ue.Operand.NodeType)
 							{
-								case ExpressionType.Call        :
-								case ExpressionType.MemberAccess:
-								case ExpressionType.New         :
-								case ExpressionType.Constant    :
+								case ExpressionType.Call           :
+								case ExpressionType.MemberAccess   :
+								case ExpressionType.New            :
+								case ExpressionType.Constant       :
 
 									accessors.Add(e, p);
 									break;
@@ -214,7 +217,7 @@ namespace LinqToDB.Expressions
 		}
 
 		[return: NotNullIfNotNull("expr")]
-		public static Expression? GetRootObject(Expression? expr, MappingSchema mapping)
+		internal static Expression? GetRootObject(Expression? expr, MappingSchema mapping)
 		{
 			if (expr == null)
 				return null;
@@ -256,7 +259,7 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
-		public static List<Expression> GetMembers(this Expression? expr)
+		internal static List<Expression> GetMembers(this Expression? expr)
 		{
 			if (expr == null)
 				return new List<Expression>();
@@ -298,7 +301,7 @@ namespace LinqToDB.Expressions
 			return list;
 		}
 
-		public static bool IsQueryable(this MethodCallExpression method, bool enumerable = true)
+		internal static bool IsQueryable(this MethodCallExpression method, bool enumerable = true)
 		{
 			var type = method.Method.DeclaringType;
 
@@ -310,14 +313,14 @@ namespace LinqToDB.Expressions
 				type == typeof(TableExtensions);
 		}
 
-		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
+		internal static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
 		{
 			var type = method.Method.DeclaringType;
 
 			return type == typeof(AsyncExtensions);
 		}
 
-		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
+		internal static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			if (methodCall.IsQueryable(AggregationBuilder.MethodNames) || methodCall.IsQueryable(CountBuilder.MethodNames))
 				return true;
@@ -331,7 +334,7 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
+		internal static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!,
 				methodCall.Method,
@@ -339,12 +342,12 @@ namespace LinqToDB.Expressions
 			return functions.Any();
 		}
 
-		public static bool IsQueryable(this MethodCallExpression method, string name)
+		internal static bool IsQueryable(this MethodCallExpression method, string name)
 		{
 			return method.Method.Name == name && method.IsQueryable();
 		}
 
-		public static bool IsQueryable(this MethodCallExpression method, string[] names)
+		internal static bool IsQueryable(this MethodCallExpression method, string[] names)
 		{
 			if (method.IsQueryable())
 				foreach (var name in names)
@@ -354,7 +357,7 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		public static bool IsAsyncExtension(this MethodCallExpression method, string[] names)
+		internal static bool IsAsyncExtension(this MethodCallExpression method, string[] names)
 		{
 			if (method.IsAsyncExtension())
 				foreach (var name in names)
@@ -371,7 +374,7 @@ namespace LinqToDB.Expressions
 			return method.Method.GetGenericMethodDefinitionCached() == genericMethodInfo;
 		}
 
-		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo[] genericMethodInfo)
+		internal static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo[] genericMethodInfo)
 		{
 			if (!method.Method.IsGenericMethod)
 				return false;
@@ -396,14 +399,14 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
+		internal static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
 			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType!, method.Method) != null;
 		}
 
 		private static readonly string[] CteMethodNames = { "AsCte", "GetCte" };
 
-		public static bool IsCte(this MethodCallExpression method, MappingSchema mappingSchema)
+		internal static bool IsCte(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
 			return method.IsQueryable(CteMethodNames);
 		}
@@ -465,7 +468,7 @@ namespace LinqToDB.Expressions
 		/// expression.GetLevelExpression(mapping, 1) == [c.ParentId]
 		/// </code>
 		/// </example>
-		public static Expression GetLevelExpression(this Expression expression, MappingSchema mapping, int level)
+		internal static Expression GetLevelExpression(this Expression expression, MappingSchema mapping, int level)
 		{
 			var current = 0;
 			var expr    = FindLevel(expression, mapping, level, ref current);
@@ -498,7 +501,7 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
-		public static int GetLevel(this Expression expression, MappingSchema mapping)
+		internal static int GetLevel(this Expression expression, MappingSchema mapping)
 		{
 			switch (expression.NodeType)
 			{
@@ -529,14 +532,14 @@ namespace LinqToDB.Expressions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsNullValue(this Expression expr)
+		internal static bool IsNullValue(this Expression expr)
 		{
 			return (expr is ConstantExpression c && c.Value == null)
 				|| (expr is DefaultExpression && expr.Type.IsNullableType());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? EvaluateExpression<T>(this Expression? expr)
+		internal static T? EvaluateExpression<T>(this Expression? expr)
 			where T : class
 		{
 			return expr.EvaluateExpression() as T;
@@ -604,7 +607,7 @@ namespace LinqToDB.Expressions
 			return value;
 		}
 
-		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
+		internal static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
 		{
 			var arguments = methodCall.Arguments;
 			var parameters = methodCall.Method.GetParameters();
@@ -617,7 +620,7 @@ namespace LinqToDB.Expressions
 		#endregion
 
 
-		public static bool IsEvaluable(this Expression? expression)
+		internal static bool IsEvaluable(this Expression? expression)
 		{
 			return expression?.NodeType switch
 			{
@@ -636,7 +639,7 @@ namespace LinqToDB.Expressions
 		/// <param name="expression">Expression to optimize.</param>
 		/// <returns>Optimized expression.</returns>
 		[return: NotNullIfNotNull("expression")]
-		public static Expression? OptimizeExpression(this Expression? expression)
+		internal static Expression? OptimizeExpression(this Expression? expression)
 		{
 			return _optimizeExpressionVisitor.Transform(expression);
 		}
@@ -750,7 +753,7 @@ namespace LinqToDB.Expressions
 			return new TransformInfo(newExpr);
 		}
 
-		public static Expression ApplyLambdaToExpression(LambdaExpression convertLambda, Expression expression)
+		internal static Expression ApplyLambdaToExpression(LambdaExpression convertLambda, Expression expression)
 		{
 			// Replace multiple parameters with single variable or single parameter with the reader expression.
 			//

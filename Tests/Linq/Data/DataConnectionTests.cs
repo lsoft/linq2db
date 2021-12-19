@@ -806,6 +806,7 @@ namespace Tests.Data
 		}
 
 		[Test]
+		[Obsolete("DataConnection.OnTrace")]
 		public void TestCloneOnTraceConnection([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
